@@ -288,3 +288,54 @@ A fully functional Rust implementation of ExcelDiff with:
 - Single static binaries with no dependencies
 
 Ready for initial release as v1.0.0.
+
+## Update: Modernized GitHub Actions Workflow
+
+**Date:** After initial implementation
+
+The GitHub Actions workflow was updated to use modern, non-deprecated actions:
+
+### Changes Made
+
+**Replaced deprecated actions:**
+- ❌ `actions/create-release@v1` (deprecated)
+- ❌ `actions/upload-release-asset@v1` (deprecated)
+- ✅ `softprops/action-gh-release@v2` (modern replacement)
+
+**Updated to latest action versions:**
+- `actions/checkout@v4`
+- `actions/upload-artifact@v4`
+- `actions/download-artifact@v4`
+
+**Output syntax verified:**
+- ✅ Uses `echo "key=value" >> $GITHUB_OUTPUT` (correct)
+- ❌ No `::set-output` commands (deprecated)
+
+### New Workflow Structure
+
+The workflow now uses a two-job approach:
+
+1. **build-release job:**
+   - Builds all platform binaries in parallel (matrix strategy)
+   - Generates SHA256 checksums
+   - Uploads artifacts for each platform
+
+2. **create-release job:**
+   - Runs after all builds complete
+   - Downloads all artifacts
+   - Extracts release notes from CHANGELOG.md
+   - Creates single GitHub release with all binaries
+
+### Benefits
+
+- **No deprecation warnings** in GitHub Actions
+- **Cleaner code** with modern `action-gh-release`
+- **Better artifact handling** with v4 actions
+- **Parallel builds** remain efficient
+- **Single release** with all assets attached
+
+The workflow continues to:
+- Extract release notes from CHANGELOG.md
+- Build for 4 platforms (Linux x86_64/ARM64, macOS x86_64/ARM64)
+- Generate and upload SHA256 checksums
+- Set binary version from git tag

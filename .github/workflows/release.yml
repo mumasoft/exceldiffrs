@@ -9,50 +9,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  create-release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      release_version: ${{ steps.get_version.outputs.version }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get version from tag
-        id: get_version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
-
-      - name: Extract changelog for version
-        id: changelog
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          awk "/## \[$VERSION\]/,/## \[/" CHANGELOG.md | sed '1d;$d' > release_notes.md
-          if [ ! -s release_notes.md ]; then
-            echo "Release version $VERSION" > release_notes.md
-          fi
-          cat release_notes.md
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ steps.get_version.outputs.version }}
-          body_path: release_notes.md
-          draft: false
-          prerelease: false
-
   build-release:
     name: Build Release
-    needs: create-release
     strategy:
       matrix:
         include:
@@ -81,6 +39,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -94,7 +59,7 @@ jobs:
 
       - name: Build
         env:
-          VERSION: ${{ needs.create-release.outputs.release_version }}
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
           cargo build --release --target ${{ matrix.target }}
 
@@ -115,26 +80,83 @@ jobs:
         run: |
           cp target/${{ matrix.target }}/release/${{ matrix.artifact_name }} ${{ matrix.asset_name }}
 
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./${{ matrix.asset_name }}
-          asset_name: ${{ matrix.asset_name }}
-          asset_content_type: application/octet-stream
-
       - name: Generate SHA256 checksum
         run: |
           shasum -a 256 ${{ matrix.asset_name }} > ${{ matrix.asset_name }}.sha256
 
-      - name: Upload Checksum
-        uses: actions/upload-release-asset@v1
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: |
+            ${{ matrix.asset_name }}
+            ${{ matrix.asset_name }}.sha256
+          if-no-files-found: error
+
+  create-release:
+    name: Create Release
+    # Only run if ALL platform builds succeed
+    needs: build-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Extract changelog for version
+        id: changelog
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          awk "/## \[$VERSION\]/,/## \[/" CHANGELOG.md | sed '1d;$d' > release_notes.md
+          if [ ! -s release_notes.md ]; then
+            echo "Release version $VERSION" > release_notes.md
+          fi
+          cat release_notes.md
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -la artifacts/
+
+      - name: Verify all expected artifacts are present
+        run: |
+          echo "Verifying all 4 platform binaries and checksums are present..."
+          for asset in exceldiff-linux-x86_64 exceldiff-linux-aarch64 exceldiff-macos-arm64 exceldiff-macos-x86_64; do
+            if [ ! -f "artifacts/$asset" ]; then
+              echo "ERROR: Missing binary: $asset"
+              exit 1
+            fi
+            if [ ! -f "artifacts/$asset.sha256" ]; then
+              echo "ERROR: Missing checksum: $asset.sha256"
+              exit 1
+            fi
+            echo "✓ Found: $asset and $asset.sha256"
+          done
+          echo "All artifacts verified successfully!"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ steps.get_version.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./${{ matrix.asset_name }}.sha256
-          asset_name: ${{ matrix.asset_name }}.sha256
-          asset_content_type: text/plain
