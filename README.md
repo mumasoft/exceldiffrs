@@ -243,7 +243,6 @@ Pre-built binaries are automatically created for Linux and macOS when a version 
 The GitHub Actions workflow will automatically:
 - Build binaries for:
   - Linux x86_64
-  - Linux ARM64 (aarch64)
   - macOS ARM64 (Apple Silicon)
   - macOS x86_64 (Intel)
 - Extract release notes from CHANGELOG.md for the version
