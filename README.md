@@ -187,7 +187,7 @@ impl FileReader for CSVReader {
 
 ## Dependencies
 
-- **calamine** (0.27): For reading Excel files
+- **calamine** (0.26): For reading Excel files
 - **rust_xlsxwriter** (0.82): For writing Excel files with formatting
 - **clap** (4.5): For command-line argument parsing
 - **anyhow** (1.0): For error handling
