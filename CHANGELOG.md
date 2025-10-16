@@ -38,5 +38,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No runtime dependencies (single static binary)
 
 [Unreleased]: https://github.com/mumasoft/exceldiff/compare/v1.0.0...HEAD
-[1.0.1]: https://github.com/mumasoft/exceldiff/releases/tag/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/mumasoft/exceldiff/releases/tag/v1.0.0
+[1.0.1]: https://github.com/mumasoft/exceldiffrs/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/mumasoft/exceldiffrs/releases/tag/v1.0.0
