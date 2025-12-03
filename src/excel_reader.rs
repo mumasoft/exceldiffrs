@@ -60,7 +60,7 @@ impl FileReader for ExcelReader {
                     Data::Bool(b) => CellValue::Bool(*b),
                     Data::Empty => CellValue::Empty,
                     Data::Error(_) => CellValue::Empty,
-                    Data::DateTime(dt) => CellValue::Float(dt.as_f64()), // Convert datetime to float
+                    Data::DateTime(dt) => CellValue::DateTime(dt.as_f64()), // Store as DateTime to preserve formatting
                     Data::DateTimeIso(s) => CellValue::String(s.clone()),
                     Data::DurationIso(s) => CellValue::String(s.clone())
                 })

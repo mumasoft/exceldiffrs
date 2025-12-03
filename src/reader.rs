@@ -9,6 +9,7 @@ pub enum CellValue {
     Float(f64),
     Int(i64),
     Bool(bool),
+    DateTime(f64), // Excel datetime stored as float (days since 1900-01-01)
     Empty,
 }
 
@@ -25,6 +26,7 @@ impl CellValue {
     pub fn normalize_with_options(&self, ignore_whitespace: bool) -> Self {
         match self {
             CellValue::Float(f) => CellValue::Float((f * 1e10).round() / 1e10),
+            CellValue::DateTime(f) => CellValue::DateTime((f * 1e10).round() / 1e10),
             CellValue::String(s) if ignore_whitespace => {
                 // Trim and collapse multiple whitespace characters (including newlines, tabs, etc.) into single spaces
                 let normalized = s
@@ -44,6 +46,7 @@ impl CellValue {
             CellValue::Float(f) => f.to_string(),
             CellValue::Int(i) => i.to_string(),
             CellValue::Bool(b) => b.to_string(),
+            CellValue::DateTime(f) => f.to_string(), // Display as numeric value for comparison purposes
             CellValue::Empty => String::new(),
         }
     }

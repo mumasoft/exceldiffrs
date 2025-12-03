@@ -167,6 +167,18 @@ impl ExcelDiffWriter {
                     worksheet.write_number(row, col, *f)?;
                 }
             }
+            CellValue::DateTime(dt) => {
+                // Create a datetime format - use Excel's built-in datetime format
+                let datetime_format = if let Some(fmt) = format {
+                    // Clone and add datetime number format
+                    fmt.clone().set_num_format("yyyy-mm-dd hh:mm:ss")
+                } else {
+                    // Create new format with datetime number format
+                    Format::new().set_num_format("yyyy-mm-dd hh:mm:ss")
+                };
+
+                worksheet.write_number_with_format(row, col, *dt, &datetime_format)?;
+            }
             CellValue::Bool(b) => {
                 if let Some(fmt) = format {
                     worksheet.write_boolean_with_format(row, col, *b, fmt)?;
