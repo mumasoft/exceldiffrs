@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2025-12-03
+
+### Fixed
+- A date/time format will now be applied to columns in the output excel file
+  if it was set in the inputs.
+
 ## [1.0.1] - 2025-10-16
 
 ### Fixed
@@ -38,5 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No runtime dependencies (single static binary)
 
 [Unreleased]: https://github.com/mumasoft/exceldiff/compare/v1.0.0...HEAD
+[1.0.2]: https://github.com/mumasoft/exceldiffrs/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/mumasoft/exceldiffrs/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/mumasoft/exceldiffrs/releases/tag/v1.0.0
